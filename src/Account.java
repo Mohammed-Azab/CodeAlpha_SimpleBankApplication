@@ -30,13 +30,6 @@ public class Account {
     public HashMap<String,Double> getTransactionHistory(){
         return TransactionHistory;
     }
-//    JPY("Japanese Yen"),
-//    AUD("Australian Dollar"),
-//    CAD("Canadian Dollar"),
-//    CHF("Swiss Franc"),
-//    CNY("Chinese Yuan"),
-//    SEK("Swedish Krona"),
-//    NZD("New Zealand Dollar");
 
     private void setCurrency(String currency) {
         switch (currency) {
