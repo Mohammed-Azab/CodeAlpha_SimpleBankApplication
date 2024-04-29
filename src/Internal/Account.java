@@ -1,3 +1,6 @@
+package Internal;
+
+import java.time.LocalDate;
 import java.util.HashMap;
 
 public class Account {
@@ -12,19 +15,24 @@ public class Account {
     private static int startedIban;
     private static HashMap<String,Double> TransactionHistory;
     private currency c;
-    private final date dateOfIssued;
-    private date dateOfTransaction;
+    private final LocalDate dateOfIssued;
+    private LocalDate dateOfTransaction;
 
     public Account(String name, double balance, String type, String currency) {
         this.name = name;
-        this.iban =   startedIban++;;
+        this.iban = startedIban++;
         this.balance = balance;
-        this.owedBalance=0;
+        this.owedBalance = 0;
         setType(type);
+
         numOfAccounts++;
         TransactionHistory = new HashMap<>();
-        dateOfIssued =new date(15,5,2025);
+        dateOfIssued = LocalDate.now();
         setCurrency(currency);
+    }
+
+    public LocalDate getDateOfIssued() {
+        return dateOfIssued;
     }
 
     public HashMap<String,Double> getTransactionHistory(){
@@ -35,22 +43,22 @@ public class Account {
         switch (currency) {
             case "EUR":
                 c = c.EUR; return;
-                case "GBP":
-                    c = c.GBP; return;
-                    case "USD":
-                        c = c.USD; return;
-                        case "JPY":
-                            c = c.JPY; return;
-                            case "AUD":
-                                c = c.AUD; return;
-                                case "CHF":
-                                    c = c.CHF; return;
-                                    case "CNY":
-                                        c = c.CNY;
-                                         case "SEK":
-                                            c = c.SEK; return;
-                                            case "NZD":
-                                                 c = c.NZD; return;
+            case "GBP":
+                c = c.GBP; return;
+            case "USD":
+                c = c.USD; return;
+            case "JPY":
+                c = c.JPY; return;
+            case "AUD":
+                c = c.AUD; return;
+            case "CHF":
+                c = c.CHF; return;
+            case "CNY":
+                c = c.CNY; return;
+            case "SEK":
+                c = c.SEK; return;
+            case "NZD":
+                c = c.NZD; return;
             default:
                 return;
         }
@@ -71,25 +79,23 @@ public class Account {
     }
 
     public void deposit(double amount) {
-        dateOfTransaction = new date(15,4,2026);
-        balance = balance + amount;
-        TransactionHistory.put(amount + "deposite "+ dateOfTransaction.toString(), amount);
+        LocalDate currentDate = LocalDate.now();
+        balance += amount;
+        TransactionHistory.put(amount + " deposited on " + currentDate, amount);
     }
 
-    public void withdraw(double amount) {
-        dateOfTransaction = new date(15,4,2026);
-        if (type != accType.credit){
-            if (amount > balance){
-                System.out.println("Transaction is not allowed due to low balance");
-                return;
-            }
+    public boolean withdraw(double amount) {
+        LocalDate currentDate = LocalDate.now();
+        if (type != accType.credit && amount > balance){
+            return false;
         }
-        balance = balance - amount;
+        balance -= amount;
         if(balance < 0){
             owedBalance = balance;
             balance = 0;
         }
-        TransactionHistory.put(amount + "withdraw "+ dateOfTransaction.toString(), amount);
+        TransactionHistory.put(amount + " withdrawn on " + currentDate, amount);
+        return true;
     }
 
     public double getBalance() {
@@ -108,16 +114,29 @@ public class Account {
         return accountNumber;
     }
 
-    public void transfer(double amount, Account destination) {
-        if (amount > balance){
+    public boolean transfer(double amount, Account destination) {
+        if (amount > balance) {
             System.out.println("Transaction is not allowed due to low balance");
-            return;
+            return false;
         }
-        dateOfTransaction = new date(15,4,2026);
-        balance = balance - amount;
+
+        LocalDate currentDate = LocalDate.now();
+        balance -= amount;
         destination.deposit(amount);
-        TransactionHistory.put(amount + "transfer "+ dateOfTransaction.toString(), amount);
+
+        // Update transaction history for sender
+        String senderTransaction = amount + " transferred to " + destination.getName() + " on " + currentDate;
+        TransactionHistory.put(senderTransaction, -amount);
+
+        // Update transaction history for destination
+        String destinationTransaction = amount + " received from " + getName() + " on " + currentDate;
+        destination.getTransactionHistory().put(destinationTransaction, amount);
+
+        return true;
     }
+
+
+
 
     public void request(double amount, Account destination) {
         System.out.println("You requested " + amount + " " + getName());
@@ -137,8 +156,8 @@ public class Account {
 
     public void acceptRequest(double amount){
         System.out.println("You accepted the request");
-        balance = balance - amount;
-        System.out.println("your balance now is: " + balance);
+        balance -= amount;
+        System.out.println("Your balance now is: " + balance);
     }
 
     public void setType(String type) {
@@ -151,19 +170,22 @@ public class Account {
 
     public void changeType(String newType) {
         convert(newType);
-        return;
     }
 
     private void convert(String newType) {
         switch (newType) {
             case "debit":
                 this.type= accType.debit; return;
-                case "credit":
-                    this.type= accType.credit; return;
-                    case "prepaid":
-                        this.type= accType.prepaid; return;
+            case "credit":
+                this.type= accType.credit; return;
+            case "prepaid":
+                this.type= accType.prepaid; return;
             default: return;
         }
     }
 
+    public String getCurrency() {
+        return c.getFullName();
+    }
 }
+

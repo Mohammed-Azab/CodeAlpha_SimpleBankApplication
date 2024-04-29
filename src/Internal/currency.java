@@ -1,3 +1,5 @@
+package Internal;
+
 public enum currency {
     USD("United States Dollar"),
     EUR("Euro"),
