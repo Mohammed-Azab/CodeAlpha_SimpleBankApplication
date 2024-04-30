@@ -3,10 +3,7 @@ package Gui;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.time.LocalDate;
-import java.util.HashMap;
+import java.util.LinkedList;
 import Internal.Account;
 
 public class BankApplicationGUI extends javax.swing.JFrame {
@@ -78,22 +75,20 @@ public class BankApplicationGUI extends javax.swing.JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.insets = new Insets(0, 0, 20, 0); // Add a bottom inset to create space
         panel.add(balanceLabel, gbc);
         gbc.gridx = 1;
         gbc.anchor = GridBagConstraints.LINE_START;
         panel.add(balanceValueLabel, gbc);
         gbc.gridy = 1;
-        gbc.gridx = 0;
-        gbc.gridwidth = 3;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(20, 0, 0, 0); // Add a top inset to create space
         panel.add(withdrawButton, gbc);
         gbc.gridy = 2;
         panel.add(addButton, gbc);
         gbc.gridy = 3;
         panel.add(transferButton, gbc);
         gbc.gridy = 4;
-        gbc.gridx = 0;
-        gbc.gridwidth = 3;
+        gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel.add(new JLabel("Last transactions"), gbc);
         gbc.gridy = 5;
@@ -105,6 +100,9 @@ public class BankApplicationGUI extends javax.swing.JFrame {
 
         pack();
     }
+
+
+
 
     private void withdrawButtonActionPerformed(java.awt.event.ActionEvent evt) {
         String input = JOptionPane.showInputDialog(this, "Enter amount to withdraw:");
@@ -137,7 +135,7 @@ public class BankApplicationGUI extends javax.swing.JFrame {
             if (destinationAccountNumber != null && !destinationAccountNumber.isEmpty()) {
                 long destinationIban = Long.parseLong(destinationAccountNumber);
                 Account destination = findAccountByIban(destinationIban); // Implement this method to find the account by IBAN
-                if (destination != null && account.transfer(amount, destination)) {
+                if (account.transfer(amount, destination)) {
                     updateBalance();
                     updateTransactionTable();
                 } else {
@@ -149,37 +147,35 @@ public class BankApplicationGUI extends javax.swing.JFrame {
         }
     }
 
-
     private Account findAccountByIban(long destinationIban) {
         return new Account("Destinatiomn",1000,"credit","dollar");
     }
 
-
     private void updateBalance() {
-        balanceValueLabel.setText(account.getBalance() + " " + account.getCurrency());
+        balanceValueLabel.setText(account.getBalance() + " " + account.getCurrencySymbol()); // Use getCurrencySymbol()
     }
+
 
     private void updateTransactionTable() {
         transactionTableModel.setRowCount(0); // Clear table
-        HashMap<String, Double> transactionHistory = account.getTransactionHistory();
-        for (String transaction : transactionHistory.keySet()) {
-            double amount = transactionHistory.get(transaction);
-            LocalDate date = LocalDate.now(); // You might want to get the actual transaction date from the transaction history
-            transactionTableModel.addRow(new Object[]{date, transaction, amount});
+        LinkedList<String> transactionHistory = account.getTransactionHistory();
+        for (int i = transactionHistory.size() - 1; i >= 0; i--) {
+            String transaction = transactionHistory.get(i);
+            String[] parts = transaction.split(" on ");
+            String transactionDate = parts[1];
+            String transactionDetails = parts[0];
+            double amount = Double.parseDouble(transactionDetails.split(" ")[0]);
+            transactionTableModel.addRow(new Object[]{transactionDate, transactionDetails, amount});
         }
     }
+
 
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new BankApplicationGUI().setVisible(true);
             }
-        }
-        );
+        });
     }
-
-
-
-    private javax.swing.JLabel jLabel2;
 
 }

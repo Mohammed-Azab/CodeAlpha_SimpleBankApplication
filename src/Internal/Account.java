@@ -1,7 +1,7 @@
 package Internal;
 
 import java.time.LocalDate;
-import java.util.HashMap;
+import java.util.LinkedList;
 
 public class Account {
     private double balance;
@@ -13,7 +13,7 @@ public class Account {
     private double owedBalance;
     private static int numOfAccounts;
     private static int startedIban;
-    private static HashMap<String,Double> TransactionHistory;
+    private LinkedList<String> transactionHistory; // Change to Stack
     private currency c;
     private final LocalDate dateOfIssued;
     private LocalDate dateOfTransaction;
@@ -26,7 +26,7 @@ public class Account {
         setType(type);
 
         numOfAccounts++;
-        TransactionHistory = new HashMap<>();
+        transactionHistory = new LinkedList<>(); // Initialize as Stack
         dateOfIssued = LocalDate.now();
         setCurrency(currency);
     }
@@ -35,68 +35,20 @@ public class Account {
         return dateOfIssued;
     }
 
-    public HashMap<String,Double> getTransactionHistory(){
-        return TransactionHistory;
-    }
-
-    private void setCurrency(String currency) {
-        switch (currency) {
-            case "EUR":
-                c = c.EUR; return;
-            case "GBP":
-                c = c.GBP; return;
-            case "USD":
-                c = c.USD; return;
-            case "JPY":
-                c = c.JPY; return;
-            case "AUD":
-                c = c.AUD; return;
-            case "CHF":
-                c = c.CHF; return;
-            case "CNY":
-                c = c.CNY; return;
-            case "SEK":
-                c = c.SEK; return;
-            case "NZD":
-                c = c.NZD; return;
-            default:
-                return;
-        }
+    public  LinkedList<String> getTransactionHistory(){ // Change return type to Stack
+        return transactionHistory;
     }
 
     public void printTransactionHistory(){
-        System.out.println(TransactionHistory);
-    }
-
-    public void payCredit(double amount) {
-        if (owedBalance==0){
-            System.out.println("Your owed money is zero");
-            return;
-        }
-        owedBalance -= amount;
-        System.out.println("You have paid " + amount + " credit");
-        TransactionHistory.put(amount + "paid credit", amount);
+        System.out.println(transactionHistory);
     }
 
     public void deposit(double amount) {
         LocalDate currentDate = LocalDate.now();
         balance += amount;
-        TransactionHistory.put(amount + " deposited on " + currentDate, amount);
+        transactionHistory.add(amount + " deposited on " + currentDate); // Push to Stack
     }
 
-    public boolean withdraw(double amount) {
-        LocalDate currentDate = LocalDate.now();
-        if (type != accType.credit && amount > balance){
-            return false;
-        }
-        balance -= amount;
-        if(balance < 0){
-            owedBalance = balance;
-            balance = 0;
-        }
-        TransactionHistory.put(amount + " withdrawn on " + currentDate, amount);
-        return true;
-    }
 
     public double getBalance() {
         return balance;
@@ -110,10 +62,6 @@ public class Account {
         return iban;
     }
 
-    public long getAccountNumber() {
-        return accountNumber;
-    }
-
     public boolean transfer(double amount, Account destination) {
         if (amount > balance) {
             System.out.println("Transaction is not allowed due to low balance");
@@ -124,19 +72,11 @@ public class Account {
         balance -= amount;
         destination.deposit(amount);
 
-        // Update transaction history for sender
-        String senderTransaction = amount + " transferred to " + destination.getName() + " on " + currentDate;
-        TransactionHistory.put(senderTransaction, -amount);
-
-        // Update transaction history for destination
-        String destinationTransaction = amount + " received from " + getName() + " on " + currentDate;
-        destination.getTransactionHistory().put(destinationTransaction, amount);
+        transactionHistory.add(amount + " transferred to " + destination.getName() + " on " + currentDate); // Push to Stack
+        destination.getTransactionHistory().add(amount + " received from " + getName() + " on " + currentDate); // Push to Stack
 
         return true;
     }
-
-
-
 
     public void request(double amount, Account destination) {
         System.out.println("You requested " + amount + " " + getName());
@@ -187,5 +127,56 @@ public class Account {
     public String getCurrency() {
         return c.getFullName();
     }
-}
+    private void setCurrency(String currency) {
+        switch (currency) {
+            case "EUR":
+                c = c.EUR; return;
+            case "GBP":
+                c = c.GBP; return;
+            case "USD":
+                c = c.USD; return;
+            case "JPY":
+                c = c.JPY; return;
+            case "AUD":
+                c = c.AUD; return;
+            case "CHF":
+                c = c.CHF; return;
+            case "CNY":
+                c = c.CNY; return;
+            case "SEK":
+                c = c.SEK; return;
+            case "NZD":
+                c = c.NZD; return;
+            default:
+                return;
+        }
+    }
 
+    public void payCredit(double amount) {
+        if (owedBalance==0){
+            System.out.println("Your owed money is zero");
+            return;
+        }
+        owedBalance -= amount;
+        System.out.println("You have paid " + amount + " credit");
+        transactionHistory.add(amount + "paid credit "+amount);
+    }
+
+    public boolean withdraw(double amount) {
+        LocalDate currentDate = LocalDate.now();
+        if (type != accType.credit && amount > balance){
+            return false;
+        }
+        balance -= amount;
+        if(balance < 0){
+            owedBalance = balance;
+            balance = 0;
+        }
+        transactionHistory.add(amount + " withdrawn on " + currentDate+ amount);
+        return true;
+    }
+    public String getCurrencySymbol() {
+        return c.getSymbol();
+    }
+
+}
